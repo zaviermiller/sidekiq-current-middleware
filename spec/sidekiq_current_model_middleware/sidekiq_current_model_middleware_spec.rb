@@ -3,15 +3,15 @@
 require 'spec_helper'
 require 'sidekiq/client'
 require 'active_support/current_attributes'
-require 'sidekiq-middleware-current'
+require 'sidekiq_current_model_middleware'
 
-describe Sidekiq::Middleware::Current do
+describe SidekiqCurrentModelMiddleware do
   let(:account) { Account.create(name: 'test') }
   let(:user) { User.create(name: 'bob', account_id: account.id) }
 
   describe 'load middleware' do
     it 'sets current when provided in message' do
-      load = Sidekiq::Middleware::Current::Load.new({ 'cattr' => 'Current' })
+      load = SidekiqCurrentModelMiddleware::Load.new({ 'cattr' => 'Current' })
       load.call(double, { 'something' => 'else', 'cattr' => { 'account' => account.to_global_id } },
                 'fake_queue') do
         expect(Current.account).to eq(account)
@@ -19,7 +19,7 @@ describe Sidekiq::Middleware::Current do
     end
 
     it 'does not set current when not provided in message' do
-      load = Sidekiq::Middleware::Current::Load.new({ 'cattr' => 'Current' })
+      load = SidekiqCurrentModelMiddleware::Load.new({ 'cattr' => 'Current' })
       load.call(double, { 'something' => 'else' },
                 'fake_queue') do
         expect(Current.account).to be_nil
@@ -27,7 +27,7 @@ describe Sidekiq::Middleware::Current do
     end
 
     it 'does not hydrate non-active record objects' do
-      load = Sidekiq::Middleware::Current::Load.new({ 'cattr' => 'Current' })
+      load = SidekiqCurrentModelMiddleware::Load.new({ 'cattr' => 'Current' })
       load.call(double, { 'something' => 'else', 'cattr' => { 'request_id' => 1234 } },
                 'fake_queue') do
         expect(Current.request_id).to eq(1234)
@@ -35,7 +35,7 @@ describe Sidekiq::Middleware::Current do
     end
 
     it 'works with multiple attributes' do
-      load = Sidekiq::Middleware::Current::Load.new({ 'cattr' => 'Current' })
+      load = SidekiqCurrentModelMiddleware::Load.new({ 'cattr' => 'Current' })
       load.call(double, { 'something' => 'else', 'cattr' => { 'account' => account.to_global_id, 'user' => user.to_global_id } },
                 'fake_queue') do
         expect(Current.user).to eq(user)
@@ -44,7 +44,7 @@ describe Sidekiq::Middleware::Current do
     end
 
     it 'works with some hydrated and some not' do
-      load = Sidekiq::Middleware::Current::Load.new({ 'cattr' => 'Current' })
+      load = SidekiqCurrentModelMiddleware::Load.new({ 'cattr' => 'Current' })
       load.call(double, { 'something' => 'else', 'cattr' => { 'account' => account.to_global_id, 'request_id' => 1234 } },
                 'fake_queue') do
         expect(Current.account).to eq(account)
@@ -53,7 +53,7 @@ describe Sidekiq::Middleware::Current do
     end
 
     it 'works with multiple currents' do
-      load = Sidekiq::Middleware::Current::Load.new({ 'cattr0' => 'Current', 'cattr1' => 'Current2' })
+      load = SidekiqCurrentModelMiddleware::Load.new({ 'cattr0' => 'Current', 'cattr1' => 'Current2' })
       load.call(double, { 'something' => 'else', 'cattr0' => { 'account' => account.to_global_id }, 'cattr1' => { 'user' => user.to_global_id } },
                 'fake_queue') do
         expect(Current.account).to eq(account)
@@ -64,7 +64,7 @@ describe Sidekiq::Middleware::Current do
 
   describe 'save middleware' do
     it 'saves current in message' do
-      save = Sidekiq::Middleware::Current::Save.new({ 'cattr' => 'Current' })
+      save = SidekiqCurrentModelMiddleware::Save.new({ 'cattr' => 'Current' })
       job = {}
       Current.account = account
       save.call(double, job, 'fake_queue', 'fake_pool') do
