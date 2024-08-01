@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'sidekiq_current_model_middleware'
-  s.version     = '1.0.1'
+  s.version     = '1.0.2'
   s.required_ruby_version = '>= 3.2.0'
   s.summary     = 'Sidekiq Middleware for persisting ActiveSupport::CurrentAttributes with ActiveRecord model support'
   s.description = 'This gem provides Sidekiq middleware that extends the functionality of Sidekiq\'s built-in CurrentAttributes to persist and restore ActiveSupport::CurrentAttributes across Sidekiq jobs, with added support for ActiveRecord models. It uses GlobalID for serialization and deserialization of ActiveRecord objects, allowing seamless integration with Rails applications to maintain context between web requests and background jobs. The middleware supports multiple CurrentAttributes classes and handles both client-side and server-side persistence.'

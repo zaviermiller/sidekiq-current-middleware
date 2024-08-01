@@ -153,16 +153,16 @@ module SidekiqCurrentModelMiddleware
 
       Sidekiq.configure_server do |config|
         config.server_middleware do |chain|
-          chain.add Sidekiq::Middleware::MultiTenant::Server
+          chain.add SidekiqCurrentModelMiddleware::Load, cattrs
         end
         config.client_middleware do |chain|
-          chain.add Sidekiq::Middleware::MultiTenant::Client
+          chain.add SidekiqCurrentModelMiddleware::Save, cattrs
         end
       end
 
       Sidekiq.configure_client do |config|
         config.client_middleware do |chain|
-          chain.add Sidekiq::Middleware::MultiTenant::Client
+          chain.add SidekiqCurrentModelMiddleware::Save, cattrs
         end
       end
     end
