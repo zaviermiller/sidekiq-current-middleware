@@ -148,11 +148,23 @@ module SidekiqCurrentModelMiddleware
     #   SidekiqCurrentModelMiddleware.persist("MyApp::Current")
     #   # or for multiple current attributes:
     #   SidekiqCurrentModelMiddleware.persist(["MyApp::Current", "MyApp::OtherCurrent"])
-    def persist(klass_or_array, config = ::Sidekiq.default_configuration)
+    def persist(klass_or_array)
       cattrs = build_cattrs_hash(klass_or_array)
 
-      config.client_middleware.add Save, cattrs
-      config.server_middleware.add Load, cattrs
+      Sidekiq.configure_server do |config|
+        config.server_middleware do |chain|
+          chain.add Sidekiq::Middleware::MultiTenant::Server
+        end
+        config.client_middleware do |chain|
+          chain.add Sidekiq::Middleware::MultiTenant::Client
+        end
+      end
+
+      Sidekiq.configure_client do |config|
+        config.client_middleware do |chain|
+          chain.add Sidekiq::Middleware::MultiTenant::Client
+        end
+      end
     end
 
     private
