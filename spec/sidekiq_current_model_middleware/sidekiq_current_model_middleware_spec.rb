@@ -72,4 +72,30 @@ describe SidekiqCurrentModelMiddleware do
       end
     end
   end
+
+  describe 'misc' do
+    it 'persists current when job queues another job' do
+      save = SidekiqCurrentModelMiddleware::Save.new({ 'cattr' => 'Current' })
+      job = {}
+      Current.account = account
+      save.call(double, job, 'fake_queue', 'fake_pool') do
+        expect(GlobalID::Locator.locate(job['cattr'][:account])).to eq(account)
+      end
+
+      load = SidekiqCurrentModelMiddleware::Load.new({ 'cattr' => 'Current' })
+      load.call(double, job, 'fake_queue') do
+        expect(Current.account).to eq(account)
+      end
+
+      job2 = {}
+      save.call(double, job2, 'fake_queue', 'fake_pool') do
+        expect(GlobalID::Locator.locate(job2['cattr'][:account])).to eq(account)
+      end
+      Current.reset
+
+      load.call(double, job2, 'fake_queue') do
+        expect(Current.account).to eq(account)
+      end
+    end
+  end
 end
